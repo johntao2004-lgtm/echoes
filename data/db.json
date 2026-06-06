@@ -1,0 +1,79 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "name": "Olivia",
+      "totem": "白泽",
+      "bio": "把一句话投入世界，等它长成森林。"
+    }
+  ],
+  "works": [
+    {
+      "id": "w-seed-1",
+      "title": "凌晨三点共同写的诗",
+      "topic": "给 3 点还醒着的人留一句话。",
+      "spirit": "凤凰",
+      "author": "Echo_07",
+      "line": "如果你也没睡，就把月光借给我半句。",
+      "layers": [
+        {
+          "name": "海浪",
+          "role": "background",
+          "mix": 38
+        },
+        {
+          "name": "陌生吉他",
+          "role": "harmony",
+          "mix": 52
+        },
+        {
+          "name": "你的回应",
+          "role": "lead",
+          "mix": 70
+        }
+      ],
+      "likes": 128,
+      "createdAt": "2026-06-06T04:03:25.012Z"
+    },
+    {
+      "id": "w-seed-2",
+      "title": "白泽在雨里听见答案",
+      "topic": "如果今天的南京有回声，它会说什么？",
+      "spirit": "白泽",
+      "author": "Lingrui_12",
+      "line": "城市没有睡，它只是把梦藏进秦淮河。",
+      "layers": [
+        {
+          "name": "雨声",
+          "role": "background",
+          "mix": 45
+        },
+        {
+          "name": "低声旁白",
+          "role": "lead",
+          "mix": 65
+        }
+      ],
+      "likes": 92,
+      "createdAt": "2026-06-06T04:03:25.014Z"
+    },
+    {
+      "id": "w-f47a37d7",
+      "title": "今日声音种子",
+      "topic": "把一滴水落进森林前的心事说出来。",
+      "spirit": "白泽",
+      "author": "Olivia",
+      "line": "想把声音永远留给你",
+      "layers": [
+        {
+          "name": "原声",
+          "role": "lead",
+          "mix": 72
+        }
+      ],
+      "likes": 0,
+      "createdAt": "2026-06-06T04:49:32.947Z"
+    }
+  ],
+  "passports": []
+}

@@ -1,0 +1,28 @@
+const $ = s => document.querySelector(s);
+let selectedWork = null, mediaRecorder = null, chunks = [], audioURL = '';
+async function api(path, opts={}){ const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts}); return r.json(); }
+function toast(t){ $('#recState').textContent=t; }
+async function init(){
+  const today = await api('/api/today'); $('#topic').textContent=today.topic; $('#deadline').textContent=today.deadline+' · 今日守护灵：'+today.spirit.name+' / '+today.spirit.trait;
+  await loadWorks(); await loadPassport(); drawShareCard();
+}
+async function loadWorks(){
+  const {works}=await api('/api/works'); const box=$('#workList'); box.innerHTML='';
+  works.forEach(w=>{ const el=document.createElement('div'); el.className='work'+(selectedWork?.id===w.id?' active':''); el.innerHTML=`<span class="pill">${w.spirit}</span><span class="pill">${w.layers.length} 层回响</span><h3>${w.title}</h3><p>${w.line}</p><small>${w.topic}</small><div class="layers">${w.layers.map(l=>`<div title="${l.name} ${l.mix}%" class="layer" style="width:${Math.max(18,l.mix)}%"></div>`).join('')}</div><p>❤ ${w.likes}</p>`; el.onclick=()=>{selectedWork=w; $('#selected').textContent='已选择：'+w.title; loadWorks();}; box.appendChild(el); });
+}
+async function loadPassport(){ const p=await api('/api/passport'); $('#passport').innerHTML=`<h3>${p.name} 的灵瑞声纹护照</h3><p>森林等级：${p.forestLevel} · 涟漪数：${p.ripples}</p><p>守护灵：${p.spirits.join(' / ')}</p><div>${p.badges.map(b=>`<span class="badge">${b}</span>`).join('')}</div>`; }
+$('#refresh').onclick=loadWorks;
+$('#mix').oninput=e=>$('#mixVal').textContent=e.target.value;
+$('#create').onclick=async()=>{ const line=$('#line').value.trim()||'我在这里留下第一滴回响。'; const topic=$('#topic').textContent; const r=await api('/api/works',{method:'POST',body:JSON.stringify({title:'今日声音种子',topic,line,author:'Olivia',spirit:($('#aiBox').dataset.spirit||'白泽'),layers:[{name:'原声',role:'lead',mix:72}]})}); selectedWork=r.work; $('#selected').textContent='已发布并选择：'+r.work.title; await loadWorks(); await loadPassport(); drawShareCard(); };
+$('#addLayer').onclick=async()=>{ if(!selectedWork){alert('请先选择一个作品');return;} const name=$('#layerName').value.trim()||'第12秒的回应'; const mix=$('#mix').value; const r=await api(`/api/works/${selectedWork.id}/layer`,{method:'POST',body:JSON.stringify({name,mix,note:'现场叠录/模拟音频'})}); selectedWork=r.work; await loadWorks(); await loadPassport(); drawShareCard(); };
+$('#genPrompt').onclick=async()=>{ const file=$('#image').files[0]; const desc=$('#imgDesc').value || file?.name || '一张灵感图片'; const ai=await api('/api/ai/image-to-prompt',{method:'POST',body:JSON.stringify({description:desc,fileName:file?.name})}); $('#aiBox').dataset.spirit=ai.spirit; $('#aiBox').innerHTML=`<b>${ai.spirit} · ${ai.trait}</b><p>${ai.narration}</p><p>生成命题：${ai.topic}</p>`; $('#topic').textContent=ai.topic; };
+$('#record').onclick=async()=>{
+  if(mediaRecorder && mediaRecorder.state==='recording'){ mediaRecorder.stop(); return; }
+  try{ const stream=await navigator.mediaDevices.getUserMedia({audio:true}); chunks=[]; mediaRecorder=new MediaRecorder(stream); mediaRecorder.ondataavailable=e=>chunks.push(e.data); mediaRecorder.onstop=()=>{ const blob=new Blob(chunks,{type:'audio/webm'}); audioURL=URL.createObjectURL(blob); $('#player').src=audioURL; toast('已录制，可作为声音种子或叠录回应'); stream.getTracks().forEach(t=>t.stop()); }; mediaRecorder.start(); toast('录音中，再点一次结束'); }
+  catch(e){ synthDemoAudio(); toast('麦克风不可用，已生成模拟回响音频'); }
+};
+function synthDemoAudio(){ const ctx=new (window.AudioContext||window.webkitAudioContext)(); const dur=2.8, rate=ctx.sampleRate, buf=ctx.createBuffer(1,rate*dur,rate), data=buf.getChannelData(0); for(let i=0;i<data.length;i++){ const t=i/rate; data[i]=Math.sin(2*Math.PI*(220+60*Math.sin(t*2))*t)*0.18*Math.exp(-t/4)+Math.sin(2*Math.PI*440*t)*0.05; } const wav=bufferToWave(buf); audioURL=URL.createObjectURL(wav); $('#player').src=audioURL; }
+function bufferToWave(abuffer){ const num=abuffer.length, buffer=new ArrayBuffer(44+num*2), view=new DataView(buffer), ch=abuffer.getChannelData(0); let p=0; const ws=s=>{for(let i=0;i<s.length;i++)view.setUint8(p++,s.charCodeAt(i));}; ws('RIFF'); view.setUint32(p,36+num*2,true); p+=4; ws('WAVEfmt '); view.setUint32(p,16,true); p+=4; view.setUint16(p,1,true); p+=2; view.setUint16(p,1,true); p+=2; view.setUint32(p,abuffer.sampleRate,true); p+=4; view.setUint32(p,abuffer.sampleRate*2,true); p+=4; view.setUint16(p,2,true); p+=2; view.setUint16(p,16,true); p+=2; ws('data'); view.setUint32(p,num*2,true); p+=4; for(let i=0;i<num;i++){let s=Math.max(-1,Math.min(1,ch[i])); view.setInt16(p,s<0?s*0x8000:s*0x7fff,true); p+=2;} return new Blob([buffer],{type:'audio/wav'}); }
+$('#share').onclick=()=>{ drawShareCard(true); };
+function drawShareCard(show=false){ const c=$('#card'), x=c.getContext('2d'); const g=x.createLinearGradient(0,0,900,520); g.addColorStop(0,'#14213d');g.addColorStop(1,'#6d2e65');x.fillStyle=g;x.fillRect(0,0,900,520);x.fillStyle='#f4c76b';x.font='bold 54px sans-serif';x.fillText('回响 Echoes',60,95);x.fillStyle='white';x.font='34px sans-serif';x.fillText('我在第 12 秒给你留了个空位',60,170);x.font='26px sans-serif';x.fillText(selectedWork?selectedWork.title:'扫码听我和陌生人在凌晨共同写的诗',60,225);x.fillStyle='rgba(255,255,255,.18)';for(let i=0;i<26;i++){x.fillRect(60+i*30,330-Math.random()*90,16,80+Math.random()*90)}x.fillStyle='#fff';x.font='24px sans-serif';x.fillText('灵瑞声纹护照 · 白泽 / 凤凰 / 玄鹿',60,455);x.strokeStyle='#f4c76b';x.lineWidth=6;x.strokeRect(715,335,120,120);x.font='16px sans-serif';x.fillText('DEMO QR',740,402); if(show)c.style.display='block'; }
+init();

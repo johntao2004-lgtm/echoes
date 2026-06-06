@@ -1,0 +1,12 @@
+{
+  "name": "echoes-lingrui-hackathon-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "回响 Echoes：灵瑞集 AI 声音共创 Demo",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "engines": { "node": ">=18" }
+}
